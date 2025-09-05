@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from .models import Card, Feedback
 from api.supabase_utils import upload_to_supabase
@@ -24,7 +25,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class CardSerializer(serializers.ModelSerializer):
 
     image_upload = serializers.ImageField(write_only=True, required=False)
-    feedback = FeedbackSerializer(required=True)
+    feedback = FeedbackSerializer(required=False)
 
     class Meta:
         model = Card
@@ -57,6 +58,12 @@ class CardSerializer(serializers.ModelSerializer):
 
         card = super().create(validated_data)
 
+        # Desserializa feedback se veio como string
+        if isinstance(feedback_data, str):
+            feedback_data = json.loads(feedback_data)
+        if feedback_data is None:
+            feedback_data = {}
+
         Feedback.objects.create(card=card)
 
         return card
@@ -72,13 +79,12 @@ class CardSerializer(serializers.ModelSerializer):
         card = super().update(instance, validated_data)
 
         if feedback_data is not None:
+            if isinstance(feedback_data, str):
+                feedback_data = json.loads(feedback_data)
 
-            feedback, created = Feedback.objects.get_or_create(card=card)
-
+            feedback, _ = Feedback.objects.get_or_create(card=card)
             for attr, value in feedback_data.items():
-
                 setattr(feedback, attr, value)
-
             feedback.save()
 
         return card
