@@ -23,7 +23,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class CardSerializer(serializers.ModelSerializer):
 
-    image_upload = serializers.ImageField(write_only=True, required=False)
+    file_upload = serializers.FileField(write_only=True, required=False)
     feedback = FeedbackSerializer(required=False)
 
     class Meta:
@@ -52,10 +52,10 @@ class CardSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
 
         feedback_data = validated_data.pop('feedback', None)
-        image_file = validated_data.pop('image_upload', None)
+        uploaded_file = validated_data.pop('file_upload', None)
 
-        if image_file:
-            validated_data['image'] = upload_to_supabase(image_file)
+        if uploaded_file:
+            validated_data['image'] = upload_to_supabase(uploaded_file)
 
         card = super().create(validated_data)
 
@@ -72,10 +72,10 @@ class CardSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         
         feedback_data = validated_data.pop('feedback', None)
-        image_file = validated_data.pop('image_upload', None)
+        uploaded_file = validated_data.pop('file_upload', None)
 
-        if image_file:
-            validated_data['image'] = upload_to_supabase(image_file)
+        if uploaded_file:
+            validated_data['image'] = upload_to_supabase(uploaded_file)
 
         card = super().update(instance, validated_data)
 
