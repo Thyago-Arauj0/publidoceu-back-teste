@@ -1,7 +1,9 @@
 import json
 from rest_framework import serializers
 from .models import Card, Feedback
-from api.supabase_utils import upload_to_supabase
+from api.supabase_utils import upload_to_supabase, delete_from_supabase
+
+from api.card.utils import file_compress
 
 class FeedbackSerializer(serializers.ModelSerializer):
 
@@ -27,6 +29,7 @@ class CardSerializer(serializers.ModelSerializer):
     feedback = FeedbackSerializer(required=False)
 
     class Meta:
+        
         model = Card
         fields = '__all__'
         extra_kwargs = {
@@ -55,14 +58,19 @@ class CardSerializer(serializers.ModelSerializer):
         uploaded_file = validated_data.pop('file_upload', None)
 
         if uploaded_file:
+
+            #compress_file_uploaded = file_compress(uploaded_file)
+
             validated_data['image'] = upload_to_supabase(uploaded_file)
 
         card = super().create(validated_data)
 
-        # Desserializa feedback se veio como string
         if isinstance(feedback_data, str):
+
             feedback_data = json.loads(feedback_data)
+
         if feedback_data is None:
+
             feedback_data = {}
 
         Feedback.objects.create(card=card)
@@ -70,22 +78,41 @@ class CardSerializer(serializers.ModelSerializer):
         return card
 
     def update(self, instance, validated_data):
-        
+
         feedback_data = validated_data.pop('feedback', None)
         uploaded_file = validated_data.pop('file_upload', None)
 
         if uploaded_file:
+
+            if instance.image:
+
+                delete_from_supabase(instance.image)
+
             validated_data['image'] = upload_to_supabase(uploaded_file)
 
         card = super().update(instance, validated_data)
 
         if feedback_data is not None:
+
             if isinstance(feedback_data, str):
+
                 feedback_data = json.loads(feedback_data)
 
             feedback, _ = Feedback.objects.get_or_create(card=card)
+
             for attr, value in feedback_data.items():
+
                 setattr(feedback, attr, value)
+                
             feedback.save()
 
         return card
+
+    
+    def delete(self, instance):
+
+        if instance.image:
+
+            delete_from_supabase(instance.image)
+
+        instance.delete()

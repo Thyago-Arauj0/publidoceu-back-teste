@@ -10,7 +10,7 @@ def upload_to_supabase(file):
     ext = file.name.split('.')[-1]
     
     short_uuid = str(uuid.uuid4())[:8]
-    unique_filename = f'images_cards/{short_uuid}.{ext}'
+    unique_filename = f'files_cards/{short_uuid}.{ext}'
 
     file_bytes = file.read()
 
@@ -18,3 +18,9 @@ def upload_to_supabase(file):
     public_url = storage.from_(settings.SUPABASE_BUCKET).get_public_url(unique_filename)
 
     return public_url
+
+def delete_from_supabase(file: str):
+
+    response = supabase.storage.from_(settings.SUPABASE_BUCKET).remove([file])
+    
+    return response
