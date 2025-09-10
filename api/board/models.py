@@ -6,6 +6,16 @@ User = get_user_model()
 
 class Board(models.Model):
 
+    user = models.ForeignKey(
+
+        User,
+        verbose_name='Usuário',
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+        related_name='user'
+
+    )
+
     customer = models.ForeignKey(
 
         User, on_delete=models.CASCADE,

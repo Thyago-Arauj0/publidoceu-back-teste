@@ -7,12 +7,12 @@ class BoardModelAdmin(admin.ModelAdmin):
 
     list_display = [
 
-        'customer', 'created_at', 'updated_at'
+        'user', 'customer', 'created_at', 'updated_at'
 
     ]
 
     list_filter = [
 
-        'customer'
+        'user', 'customer'
 
     ]

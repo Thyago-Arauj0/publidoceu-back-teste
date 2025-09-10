@@ -11,6 +11,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {
 
+            'user': {'required': False},
             'customer': {'required': False},
             'created_at': {'read_only': True},
             'updated_at': {'read_only': True},
