@@ -71,6 +71,16 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 		blank=True, null=True, 
 		verbose_name='Nome completo'
 	)
+
+    author = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        verbose_name='Autor',
+        null=True,
+        blank=True,
+        related_name='author_user'
+        
+    )
     
     objects = UserManager()
     

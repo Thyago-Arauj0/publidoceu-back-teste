@@ -9,9 +9,9 @@ User = get_user_model()
 @receiver(post_save, sender=User)
 def create_board_user(sender, instance, created, **kwargs):
     
-    if created and not instance.is_staff and not instance.is_superuser:
+    if created:
 
-        if not Board.objects.filter(customer=instance).exists():
+        if not instance.is_staff and not instance.is_superuser:
             
-            Board.objects.create(customer=instance)
+            Board.objects.get_or_create(customer=instance, author=instance.author)
 		

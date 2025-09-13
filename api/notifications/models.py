@@ -10,22 +10,17 @@ User = get_user_model()
 class Notification(models.Model):
 
     user = models.ForeignKey(
-
-        User,
-        verbose_name='Usuário',
-        null=True, blank=True,
+        "api_custom_auth.UserProfile",
         on_delete=models.CASCADE,
-        related_name='notifications'
-
+        related_name="notifications_received",
+        null=True, blank=True
     )
 
     author = models.ForeignKey(
-        User,
-        verbose_name='Autor',
-        null=True, blank=True,
+        "api_custom_auth.UserProfile",
         on_delete=models.CASCADE,
-        related_name='author'
-
+        related_name="notifications_sent",
+        null=True, blank=True
     )
 
     title = models.CharField(
