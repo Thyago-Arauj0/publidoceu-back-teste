@@ -93,7 +93,8 @@ class AccountSerializer(serializers.ModelSerializer):
             'id', 'name', 
             'first_name', 'last_name',
             'email','password', 'profile',
-            'is_active', 'is_staff', 'is_superuser'
+            'is_active', 'is_staff', 'is_superuser',
+            'author'
         )
 
         read_only_fields = (
