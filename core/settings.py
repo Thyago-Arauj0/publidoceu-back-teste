@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from urllib.parse import urlparse
 from datetime import timedelta
 
+from django.utils import timezone
+
 import os
 
 load_dotenv()
