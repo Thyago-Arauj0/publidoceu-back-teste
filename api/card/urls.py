@@ -3,7 +3,7 @@ from rest_framework_nested import routers
 
 from api.board.views import BoardViewSet
 
-from .views import CardViewset
+from .views import CardViewset, DeleteCard1MonthApprovedView
 
 router = routers.SimpleRouter()
 router.register(r'board', BoardViewSet, basename='board-card')
@@ -14,4 +14,9 @@ cards_router.register(r'card', CardViewset, basename='board-cards')
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(cards_router.urls)),
+    path(
+        'cron/delete-cards/',
+        DeleteCard1MonthApprovedView.as_view(),
+        name='delete_cards_cron'
+    ),
 ]
