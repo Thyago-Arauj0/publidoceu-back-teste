@@ -35,14 +35,6 @@ class Card(models.Model):
 
     )
 
-    image = models.URLField(
-
-        verbose_name='Imagem',
-        default='https://storage.googleapis.com/star-lab/blog/OGs/image-not-found.png',
-        null=True, blank=True
-
-    )
-
     status = models.CharField(
         verbose_name='Status',
         max_length=20,
@@ -128,6 +120,39 @@ class Card(models.Model):
     def __str__(self):
 
         return self.title
+
+class FileCard(models.Model):
+
+    card = models.ForeignKey(
+
+        Card, on_delete=models.CASCADE,
+        verbose_name='Card',
+        null=False, blank=False,
+
+    )
+
+    is_approved = models.BooleanField(
+
+        verbose_name='Está aprovado',
+        null=True, blank=True,
+
+    )
+
+    file = models.URLField(
+         
+         verbose_name='Arquivo',
+         default='https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png'
+
+    )
+
+    class Meta:
+
+        verbose_name = 'Arquivo do Card'
+        verbose_name_plural = 'Arquivos de Cards'
+
+    def __str__(self):
+
+        return f'Arquivo {self.id} ref. {self.card.title}'
     
 class Feedback(models.Model):
 

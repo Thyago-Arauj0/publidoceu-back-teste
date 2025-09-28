@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Card, Feedback
+from .models import Card, Feedback, FileCard
 
 @admin.register(Card)
 class CardModelAdmin(admin.ModelAdmin):
@@ -18,6 +18,21 @@ class CardModelAdmin(admin.ModelAdmin):
         'title', 'board', 'status', 'is_active'
 
     ]
+
+@admin.register(FileCard)
+class FileCardAdminModel(admin.ModelAdmin):
+
+    list_display = (
+
+        'card', 'file', 'is_approved'
+
+    )
+
+    list_filter = (
+
+        'card', 'is_approved'
+
+    )
 
 @admin.register(Feedback)
 class FeedbackModelAdmin(admin.ModelAdmin):

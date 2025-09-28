@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'api.auth',
     'api.board',
     'api.card',
+    'api.checklist',
     'api.notifications'
 ]
 
