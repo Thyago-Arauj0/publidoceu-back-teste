@@ -36,5 +36,7 @@ class Checklist(models.Model):
     )
 
     def __str__(self):
-
-        return f'Checklist de {self.board.customer.name}'
+        # Verifica se card existe para não quebrar
+        if self.card and self.card.board and self.card.board.customer:
+            return f'Checklist de {self.card.board.customer.name}'
+        return f'Checklist sem card'
