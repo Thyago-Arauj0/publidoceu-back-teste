@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Card, Feedback, FileCard
+from .models import Card, Feedback
+from api.file.models import FileCard
 
 @admin.register(Card)
 class CardModelAdmin(admin.ModelAdmin):

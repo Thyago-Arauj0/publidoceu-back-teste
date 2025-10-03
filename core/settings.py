@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'api.board',
     'api.card',
     'api.checklist',
-    'api.notifications'
+    'api.notifications',
+    'api.file',
 ]
 
 MIDDLEWARE = [

@@ -7,5 +7,6 @@ urlpatterns = [
     path('', include('api.card.urls')),
     path('', include('api.checklist.urls')),
     path('', include('api.notifications.urls')),
+    path('', include('api.file.urls')), 
 
 ]
