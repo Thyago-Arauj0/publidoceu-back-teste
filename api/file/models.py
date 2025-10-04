@@ -24,6 +24,7 @@ class FileCard(models.Model):
     )
 
     class Meta:
+        
         verbose_name = 'Arquivo do Card'
         verbose_name_plural = 'Arquivos de Cards'
 
