@@ -2,23 +2,39 @@ import uuid
 from django.conf import settings
 from supabase import create_client
 from storage3.exceptions import StorageApiError
-#from api.compress_utils import compress_image
+from api.compress_utils import compress_file
+import os
 
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_KEY)
 storage = supabase.storage
 
 def upload_to_supabase(file, original_name=None, content_type=None):
 
-    if file.size > 120 * 1024 * 1024:
+    if file.size > 100 * 1024 * 1024:
 
-        raise ValueError("O arquivo é muito grande. O limite é 120MB.")
+        raise ValueError("O arquivo é muito grande. O limite é 100MB.")
+    
+    try:
+        
+        compressed_file_path = compress_file(file)
 
-    ext = file.name.split('.')[-1]
+        with open(compressed_file_path, 'rb') as compressed_file:
+            file_bytes = compressed_file.read()
+
+        ext = os.path.splitext(compressed_file_path)[1].lstrip('.')
+        os.unlink(compressed_file_path)
+
+    except Exception as e:
+    
+        print(f"Erro na compressão, usando arquivo original: {e}")
+
+        file_bytes = file.read()
+        ext = file.name.split('.')[-1]
     
     short_uuid = str(uuid.uuid4())[:8]
     unique_filename = f'files_cards/{short_uuid}.{ext}'
 
-    file_bytes = file.read()
+
 
     try:
 
@@ -31,7 +47,7 @@ def upload_to_supabase(file, original_name=None, content_type=None):
 
         if e.status_code == 413:
 
-            raise ValueError("O arquivo é muito grande. O limite é 120MB.")
+            raise ValueError("O arquivo é muito grande. O limite é 100MB.")
         
         raise
 
