@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import FileCard
 from api.supabase_utils import upload_to_supabase, delete_from_supabase
-
+from api.cloudinary_utils import upload_to_cloudinary, delete_from_cloudinary
 
 class FileCardSerializer(serializers.ModelSerializer):
 
@@ -22,7 +22,12 @@ class FileCardSerializer(serializers.ModelSerializer):
 
         if file:
             try:
-                validated_data['file'] = upload_to_supabase(
+                # validated_data['file'] = upload_to_supabase(
+                #     file,
+                #     original_name=file.name,
+                #     content_type=file.content_type
+                # )
+                validated_data['file'] = upload_to_cloudinary(
                     file,
                     original_name=file.name,
                     content_type=file.content_type
@@ -39,9 +44,15 @@ class FileCardSerializer(serializers.ModelSerializer):
 
         if file:
             if instance.file:
-                delete_from_supabase(instance.file)
+                # delete_from_supabase(instance.file)
+                delete_from_cloudinary(instance.file)
             try:
-                validated_data['file'] = upload_to_supabase(
+                # validated_data['file'] = upload_to_supabase(
+                #     file,
+                #     original_name=file.name,
+                #     content_type=file.content_type
+                # )
+                validated_data['file'] = upload_to_cloudinary(
                     file,
                     original_name=file.name,
                     content_type=file.content_type
@@ -51,12 +62,14 @@ class FileCardSerializer(serializers.ModelSerializer):
 
         elif clear_file:
             if instance.file:
-                delete_from_supabase(instance.file)
+                # delete_from_supabase(instance.file)
+                delete_from_cloudinary(instance.file)
             validated_data['file'] = None
 
         return super().update(instance, validated_data)
 
     def delete(self, instance):
         if instance.file:
-            delete_from_supabase(instance.file)
+            # delete_from_supabase(instance.file)
+            delete_from_cloudinary(instance.file)
         instance.delete()

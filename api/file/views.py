@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from api.supabase_utils import upload_to_supabase, delete_from_supabase
+from api.supabase_utils import delete_from_supabase
+from api.cloudinary_utils import delete_from_cloudinary
 from .models import FileCard
 from .serializers import FileCardSerializer
 from api.card.models import Card
@@ -15,7 +16,8 @@ class FileCardViewSet(viewsets.ModelViewSet):
 
         if instance.file:
 
-            delete_from_supabase(instance.file)
+            # delete_from_supabase(instance.file)
+            delete_from_cloudinary(instance.file)
             
         instance.delete()
 

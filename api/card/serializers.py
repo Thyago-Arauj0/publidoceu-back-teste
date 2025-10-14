@@ -3,7 +3,6 @@ from rest_framework import serializers
 from .models import Card, Feedback
 from api.file.models import FileCard
 from api.file.serializers import FileCardSerializer
-from api.supabase_utils import upload_to_supabase, delete_from_supabase
 
 import re
 class FeedbackSerializer(serializers.ModelSerializer):
