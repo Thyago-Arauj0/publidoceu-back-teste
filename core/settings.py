@@ -169,6 +169,8 @@ CORS_ALLOW_METHODS = [
     'OPTIONS',
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
