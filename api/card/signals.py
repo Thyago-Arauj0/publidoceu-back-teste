@@ -1,9 +1,7 @@
 from django.dispatch import receiver
-from django.db.models.signals import post_save
 from django.db.models.signals import pre_delete
-from api.supabase_utils import delete_from_supabase
 from api.cloudinary_utils import delete_from_cloudinary
-from .models import Card, Feedback
+from .models import Card
 
 
 @receiver(pre_delete, sender=Card)

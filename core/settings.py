@@ -4,15 +4,11 @@ from dotenv import load_dotenv
 from urllib.parse import urlparse
 from datetime import timedelta
 
-from django.utils import timezone
-
 from corsheaders.defaults import default_headers
 
 import os
 
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 
 load_dotenv()
 

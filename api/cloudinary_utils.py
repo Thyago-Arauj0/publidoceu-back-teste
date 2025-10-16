@@ -6,155 +6,171 @@ import cloudinary.uploader
 import cloudinary.api
 from api.compress_utils import compress_file
 import os
+import time
+import hashlib
+import hmac
+import re
+from urllib.parse import unquote
 
-def upload_to_cloudinary(file, original_name=None, content_type=None, resource_type="auto"):
+def generate_cloudinary_signature(folder="files_cards", user_id=None):
     """
-    Faz upload de arquivo para o Cloudinary
+    Gera uma assinatura temporária para upload direto no Cloudinary (frontend)
     """
-    if file.size > 100 * 1024 * 1024:
-        raise ValueError("O arquivo é muito grande. O limite é 100MB.")
-    
     try:
-        # Comprime o arquivo (mantém a mesma lógica)
-        compressed_file_path = compress_file(file)
+        timestamp = int(time.time())
+        print(f"🕒 Timestamp gerado: {timestamp}")
         
-        # Prepara o nome único
-        short_uuid = str(uuid.uuid4())[:8]
-        unique_filename = f'files_cards/{short_uuid}'
+        # Adiciona user_id ao folder para organização
+        if user_id:
+            folder = f"{folder}/user_{user_id}"
         
-        # Faz upload para o Cloudinary
-        upload_result = cloudinary.uploader.upload(
-            compressed_file_path,
-            public_id=unique_filename,
-            resource_type=resource_type,  # "auto" detecta automaticamente
-            overwrite=True,
-            quality="auto:good"  # Compressão adicional no Cloudinary
-        )
+        # Parâmetros que serão usados na assinatura
+        params_to_sign = {
+            "timestamp": timestamp,
+            "folder": folder
+        }
+
+        # Monta string para assinar - ORDEM É CRÍTICA
+        sign_list = []
+        for key in sorted(params_to_sign.keys()):
+            sign_list.append(f"{key}={params_to_sign[key]}")
+        sign_str = "&".join(sign_list)
         
-        # Limpa o arquivo temporário
-        os.unlink(compressed_file_path)
+        print(f"📝 String para assinar: '{sign_str}'")
+        print(f"🔑 API Secret (primeiros 10 chars): {settings.CLOUDINARY_API_SECRET[:10]}...")
+
+        # Gera assinatura HMAC-SHA1
+        signature = hmac.new(
+            settings.CLOUDINARY_API_SECRET.encode('utf-8'),
+            sign_str.encode('utf-8'),
+            hashlib.sha1
+        ).hexdigest()
+
+        print(f"✅ Assinatura gerada: {signature}")
+
+        return {
+            "timestamp": timestamp,
+            "folder": folder,
+            "signature": signature,
+            "api_key": settings.CLOUDINARY_API_KEY,
+            "cloud_name": settings.CLOUDINARY_CLOUD_NAME
+        }
+    
+    except Exception as e:
+        print(f"❌ Erro ao gerar assinatura: {e}")
+        raise
+
+def generate_cloudinary_signature_alternative(folder="files_cards", user_id=None):
+    """
+    Método alternativo para gerar assinatura - mais compatível
+    """
+    try:
+        timestamp = int(time.time())
+        print(f"🕒 Timestamp alternativo: {timestamp}")
         
-        # Retorna a URL pública
-        return upload_result['secure_url']
+        if user_id:
+            folder = f"{folder}/user_{user_id}"
+
+        # Método mais direto - apenas timestamp e folder
+        params = f"folder={folder}&timestamp={timestamp}"
+        
+        print(f"📝 String alternativa para assinar: '{params}'")
+        print(f"🔑 API Secret: {settings.CLOUDINARY_API_SECRET[:5]}...")
+
+        signature = hmac.new(
+            settings.CLOUDINARY_API_SECRET.encode('utf-8'),
+            params.encode('utf-8'),
+            hashlib.sha1
+        ).hexdigest()
+
+        print(f"✅ Assinatura alternativa: {signature}")
+
+        return {
+            "timestamp": timestamp,
+            "folder": folder,
+            "signature": signature,
+            "api_key": settings.CLOUDINARY_API_KEY,
+            "cloud_name": settings.CLOUDINARY_CLOUD_NAME
+        }
+    
+    except Exception as e:
+        print(f"❌ Erro na assinatura alternativa: {e}")
+        raise
+
+def extract_public_id_from_url(public_url):
+    """
+    Extrai o public_id de uma URL do Cloudinary de forma mais robusta
+    """
+    try:
+        print(f"🔍 Extraindo public_id da URL: {public_url}")
+        
+        if 'cloudinary.com' not in public_url:
+            print("❌ URL não é do Cloudinary")
+            return None
+        
+        # Decodifica URL (remove encoding)
+        decoded_url = unquote(public_url)
+        
+        # Regex para extrair public_id de diferentes formatos de URL do Cloudinary
+        patterns = [
+            # Padrão: /upload/v123456789/public_id.ext
+            r'/upload/(?:v\d+/)?([^?]+)',
+            # Padrão: /image/upload/v123456789/public_id.ext
+            r'/(?:image|video|raw)/upload/(?:v\d+/)?([^?]+)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, decoded_url)
+            if match:
+                public_id_with_ext = match.group(1)
+                # Remove extensão do arquivo
+                public_id = public_id_with_ext.rsplit('.', 1)[0]
+                print(f"✅ Public ID extraído: '{public_id}'")
+                return public_id
+        
+        print("❌ Não foi possível extrair public_id da URL")
+        return None
         
     except Exception as e:
-        print(f"Erro na compressão/upload, tentando upload direto: {e}")
-        
-        # Fallback: upload direto sem compressão
-        short_uuid = str(uuid.uuid4())[:8]
-        unique_filename = f'files_cards/{short_uuid}'
-        
-        upload_result = cloudinary.uploader.upload(
-            file,
-            public_id=unique_filename,
-            resource_type=resource_type,
-            overwrite=True,
-            quality="auto:good"
-        )
-        
-        return upload_result['secure_url']
-    
-# cloudinary_utils.py
+        print(f"❌ Erro ao extrair public_id: {e}")
+        return None
+
 def delete_from_cloudinary(public_url):
     """
-    Deleta arquivo do Cloudinary
+    Deleta arquivo do Cloudinary de forma mais robusta
     """
     try:
-        print(f"INICIANDO EXCLUSÃO - URL recebida: {public_url}")
+        print(f"🗑️ INICIANDO EXCLUSÃO - URL: {public_url}")
         
-        # Verifica se a URL é do Cloudinary
-        if 'cloudinary.com' not in public_url:
-            print("URL não é do Cloudinary")
+        public_id = extract_public_id_from_url(public_url)
+        if not public_id:
             return False
         
-        # Extrai o public_id da URL do Cloudinary
-        # Padrão: https://res.cloudinary.com/cloud_name/tipo/upload/version/public_id.ext
-        parts = public_url.split('/upload/')
-        if len(parts) < 2:
-            print("Não foi possível extrair public_id da URL")
-            return False
+        # Lista de resource_types para tentar
+        resource_types = ['image', 'video', 'raw']
         
-        # Pega tudo após '/upload/'
-        path_after_upload = parts[1]
+        for resource_type in resource_types:
+            try:
+                print(f"🔄 Tentando excluir como {resource_type}...")
+                result = cloudinary.uploader.destroy(public_id, resource_type=resource_type)
+                print(f"📊 Resultado ({resource_type}): {result}")
+                
+                if result.get('result') == 'ok':
+                    print(f"✅ Arquivo excluído com sucesso (como {resource_type})!")
+                    return True
+                elif result.get('result') == 'not found':
+                    print(f"⚠️ Arquivo não encontrado como {resource_type}")
+                    continue
+                    
+            except Exception as type_error:
+                print(f"❌ Erro ao excluir como {resource_type}: {type_error}")
+                continue
         
-        # Remove parâmetros de query string se existirem
-        path_after_upload = path_after_upload.split('?')[0]
-        
-        # Divide o caminho por '/'
-        path_parts = path_after_upload.split('/')
-        
-        # Remove o parâmetro de versão se existir (começa com 'v')
-        if path_parts and path_parts[0].startswith('v'):
-            # Se tem versão, o public_id é tudo depois da versão
-            public_id = '/'.join(path_parts[1:])
-        else:
-            # Se não tem versão, tudo é o public_id
-            public_id = '/'.join(path_parts)
-        
-        # Remove a extensão do arquivo para obter o public_id correto
-        public_id = public_id.rsplit('.', 1)[0]
-        
-        print(f"Public ID extraído: '{public_id}'")
-        
-        # Tenta deletar como imagem primeiro
-        try:
-            result = cloudinary.uploader.destroy(public_id, resource_type='image')
-            print(f"Tentativa como imagem: {result}")
-            if result.get('result') == 'ok':
-                print("Arquivo excluído com sucesso do Cloudinary (como imagem)!")
-                return True
-        except Exception as img_error:
-            print(f" Não é imagem: {img_error}")
-        
-        # Tenta deletar como vídeo
-        try:
-            result = cloudinary.uploader.destroy(public_id, resource_type='video')
-            print(f"Tentativa como vídeo: {result}")
-            if result.get('result') == 'ok':
-                print("Arquivo excluído com sucesso do Cloudinary (como vídeo)!")
-                return True
-        except Exception as video_error:
-            print(f" Não é vídeo: {video_error}")
-        
-        # Tenta deletar como raw/arquivo
-        try:
-            result = cloudinary.uploader.destroy(public_id, resource_type='raw')
-            print(f"Tentativa como raw: {result}")
-            if result.get('result') == 'ok':
-                print("Arquivo excluído com sucesso do Cloudinary (como raw)!")
-                return True
-        except Exception as raw_error:
-            print(f" Não é raw: {raw_error}")
-        
-        print("Arquivo não encontrado em nenhum resource_type")
+        print("❌ Arquivo não encontrado em nenhum resource_type")
         return False
             
     except Exception as e:
-        print(f"ERRO CRÍTICO ao excluir arquivo do Cloudinary: {e}")
+        print(f"💥 ERRO CRÍTICO ao excluir arquivo: {e}")
         import traceback
-        print(f"Stack trace: {traceback.format_exc()}")
+        print(f"📋 Stack trace: {traceback.format_exc()}")
         return False
-    
-def get_cloudinary_resource_type(file):
-    """
-    Determina o resource_type baseado na extensão do arquivo
-    """
-    if hasattr(file, 'name'):
-        filename = file.name.lower()
-    else:
-        filename = str(file).lower()
-    
-    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff']
-    video_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv']
-    raw_extensions = ['.pdf', '.doc', '.docx', '.txt', '.zip', '.rar']
-    
-    ext = os.path.splitext(filename)[1]
-    
-    if ext in image_extensions:
-        return "image"
-    elif ext in video_extensions:
-        return "video"
-    elif ext in raw_extensions:
-        return "raw"
-    else:
-        return "auto"  # Cloudinary detecta automaticamente

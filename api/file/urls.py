@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from api.board.views import BoardViewSet
 from api.card.views import CardViewset
 from api.file.views import FileCardViewSet
+from .views import get_cloudinary_signature
 
 router = routers.SimpleRouter()
 router.register(r'board', BoardViewSet, basename='board')
@@ -18,4 +19,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(cards_router.urls)),
     path('', include(files_router.urls)),
+    path('cloudinary-signature/', get_cloudinary_signature, name='cloudinary-signature'),
 ]
