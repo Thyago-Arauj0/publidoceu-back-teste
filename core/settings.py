@@ -146,7 +146,8 @@ CSRF_TRUSTED_ORIGINS =  [
     "http://127.0.0.1:3000",
     "https://publidoceu.vercel.app",
     "https://www.publidoceu.com.br",
-    "https://publidoceu.com.br"
+    "https://publidoceu.com.br",
+    "https://publidoceu-back-teste.vercel.app"
 
 ]
 
